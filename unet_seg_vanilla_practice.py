@@ -7,11 +7,13 @@ from skimage.io import imread, imsave
 from skimage.color import rgba2rgb
 from skimage.transform import resize
 from scipy.misc import imshow
-from keras.models import Model
-from keras.layers import Input, concatenate, Conv2D, MaxPooling2D, UpSampling2D
-from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping, LearningRateScheduler
-from keras import backend as K
+
+from tensorflow.keras.models import Model
+
+from tensorflow.keras.layers import Input, concatenate, Conv2D, MaxPooling2D, UpSampling2D
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping, LearningRateScheduler
+from tensorflow.keras import backend as K
 import glob
 from keras.models import load_model
 ##############################################################################################################
@@ -217,8 +219,12 @@ def convolution_block(input_layer, num_filters, kernel_size, activation_func):
                    kernel_initializer="he_uniform", padding='same')(input_layer)
     conv2 = Conv2D(filters=num_filters, kernel_size=kernel_size, activation=activation_func,
                    kernel_initializer="he_uniform", padding='same')(conv1)
+    conv3 = Conv2D(filters=num_filters, kernel_size=kernel_size, activation=activation_func,
+                   kernel_initializer="he_uniform", padding='same')(conv2)
+    conv4 = Conv2D(filters=num_filters, kernel_size=kernel_size, activation=activation_func,
+                   kernel_initializer="he_uniform", padding='same')(conv3)
 
-    return conv2
+    return conv4
 
 
 def conv_downsample_block(input_layer, num_filters, kernel_size, activation_func, max_pool_shape):
@@ -340,8 +346,8 @@ def create_and_train_model(training_data, validation_data, input_height, input_w
     print('Fitting model...')
     print('-' * 30)
 
-    batch_size = 8
-    num_epochs = 5
+    batch_size = 20
+    num_epochs = 8
     # num_epochs = 100
 
     model.fit_generator(generate_training_batches(training_data, batch_size=batch_size),
@@ -453,10 +459,10 @@ if __name__ == '__main__':
     training_data, validation_data = get_training_data(path_to_data_dir)
 
     # Train model using data:
-    create_and_train_model(training_data[:20], validation_data[:20], input_height=None, input_width=None,
+    create_and_train_model(training_data, validation_data, input_height=None, input_width=None,
                            first_layer_num_filters=32, num_classes=1)
 
-    # dice_score = evaluate_model("/media/michalma/da967e7e-0ad3-4ec9-acd2-2e4493ad6c6a/class2_data/val",
-    #                             "/media/michalma/da967e7e-0ad3-4ec9-acd2-2e4493ad6c6a/class2_weights.h5")
-    # print("The dice score for evaulated dataset:", dice_score)
+    dice_score = evaluate_model("class2_data/val",
+                                "class2_weights.h5")
+    print("The dice score for evaulated dataset:", dice_score)
 ##############################################################################################################
